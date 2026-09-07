@@ -1,0 +1,257 @@
+package com.aveson.artist;
+
+import android.app.*;
+import android.os.*;
+import android.content.*;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
+import android.provider.Settings;
+import android.view.*;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+public class MainActivity extends Activity {
+    final int BG=Color.rgb(5,7,19), PANEL=Color.rgb(13,17,34), PANEL2=Color.rgb(17,23,44);
+    final int PURPLE=Color.rgb(139,92,246), BLUE=Color.rgb(56,189,248), TEXT=Color.rgb(247,247,251);
+    final int MUTED=Color.rgb(155,164,191), GREEN=Color.rgb(85,227,154), LINE=Color.rgb(36,42,67);
+    LinearLayout root, content;
+    TextView title, subtitle;
+    int pad=18;
+
+    @Override public void onCreate(Bundle b){
+        super.onCreate(b);
+        getWindow().setStatusBarColor(BG);
+        getWindow().setNavigationBarColor(BG);
+        showLogin();
+    }
+
+    TextView tv(String s,float size,int color){
+        TextView t=new TextView(this);
+        t.setText(s); t.setTextSize(size); t.setTextColor(color);
+        t.setGravity(Gravity.CENTER_VERTICAL);
+        t.setFontFeatureSettings("kern");
+        return t;
+    }
+
+    GradientDrawable bg(int color,float r){
+        GradientDrawable g=new GradientDrawable();
+        g.setColor(color); g.setCornerRadius(r); return g;
+    }
+    GradientDrawable stroke(int fill,int line,float r){
+        GradientDrawable g=bg(fill,r); g.setStroke(2,line); return g;
+    }
+    TextView button(String text,int fill){
+        TextView b=tv(text,15,TEXT); b.setTypeface(null,1); b.setGravity(Gravity.CENTER);
+        b.setBackground(bg(fill,34)); b.setPadding(16,16,16,16);
+        return b;
+    }
+    void add(View v,int top,int bottom){
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);
+        lp.setMargins(0,top,0,bottom); root.addView(v,lp);
+    }
+    void base(){
+        root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setPadding(pad,18,pad,10);
+        root.setBackgroundColor(BG);
+        ScrollView sc=new ScrollView(this); sc.setFillViewport(true);
+        LinearLayout wrap=new LinearLayout(this); wrap.setOrientation(LinearLayout.VERTICAL);
+        wrap.addView(root,new LinearLayout.LayoutParams(-1,-2));
+        setContentView(sc); sc.addView(wrap);
+    }
+
+    void showLogin(){
+        base();
+        LinearLayout brand=new LinearLayout(this); brand.setGravity(Gravity.CENTER_VERTICAL);
+        ImageView logo=new ImageView(this); logo.setImageResource(com.aveson.artist.R.drawable.aveson_logo);
+        brand.addView(logo,new LinearLayout.LayoutParams(78,78));
+        TextView av=tv("AVESON",30,TEXT); av.setTypeface(null,1); av.setTextColor(PURPLE);
+        LinearLayout.LayoutParams ap=new LinearLayout.LayoutParams(-2,78); ap.setMargins(12,0,0,0); brand.addView(av,ap);
+        add(brand,8,8);
+
+        TextView kicker=tv("ARTIST PORTAL  •  2.0",12,BLUE); kicker.setTypeface(null,1); add(kicker,10,4);
+        TextView h=tv("Build your global\nmusic business.",31,TEXT); h.setTypeface(null,1); add(h,0,8);
+        add(tv("One premium workspace for releases, rights, royalties and audience growth.",16,MUTED),0,28);
+
+        LinearLayout hero=new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(18,18,18,18); hero.setBackground(stroke(PANEL,LINE,28));
+        TextView ht=tv("WELCOME TO AVESON",12,MUTED); ht.setTypeface(null,1); hero.addView(ht);
+        TextView hs=tv("Your music. Your global stage.",20,TEXT); hs.setTypeface(null,1);
+        LinearLayout.LayoutParams hsp=new LinearLayout.LayoutParams(-1,55); hsp.setMargins(0,4,0,0); hero.addView(hs,hsp);
+        TextView chips=tv("●  DISTRIBUTION     ●  ROYALTIES     ●  RIGHTS",11,GREEN); hero.addView(chips);
+        add(hero,0,28);
+
+        EditText email=new EditText(this); email.setHint("Artist email"); email.setHintTextColor(MUTED); email.setTextColor(TEXT); email.setTextSize(16);
+        email.setSingleLine(true); email.setInputType(33); email.setPadding(18,0,18,0); email.setBackground(stroke(PANEL2,LINE,28)); add(email,0,14);
+
+        EditText pass=new EditText(this); pass.setHint("Password"); pass.setHintTextColor(MUTED); pass.setTextColor(TEXT); pass.setTextSize(16);
+        pass.setSingleLine(true); pass.setInputType(129); pass.setPadding(18,0,18,0); pass.setBackground(stroke(PANEL2,LINE,28)); add(pass,0,8);
+
+        TextView forgot=tv("Forgot password?",13,BLUE); forgot.setGravity(Gravity.RIGHT); add(forgot,0,18);
+
+        TextView sign=button("SIGN IN  →",PURPLE); add(sign,0,12);
+        TextView create=button("CREATE ARTIST ACCOUNT",PANEL2); create.setBackground(stroke(PANEL2,LINE,34)); add(create,0,20);
+
+        add(tv("Secure workspace  •  Global distribution  •  Royalty management",12,MUTED),0,0);
+
+        sign.setOnClickListener(v->{
+            if(email.getText().toString().trim().length()<3 || pass.getText().toString().length()<4){
+                Toast.makeText(this,"Enter a valid email and password.",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            hideKeyboard();
+            showHome(email.getText().toString().trim());
+        });
+        create.setOnClickListener(v->Toast.makeText(this,"Artist registration will connect to the AVESON backend.",Toast.LENGTH_LONG).show());
+    }
+
+    void hideKeyboard(){ ((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(root.getWindowToken(),0); }
+
+    TextView header(String name,String desc){
+        LinearLayout bar=new LinearLayout(this); bar.setOrientation(LinearLayout.VERTICAL);
+        TextView back=tv("‹  BACK",13,BLUE); back.setTypeface(null,1); back.setOnClickListener(v->showHome("Artist"));
+        bar.addView(back,new LinearLayout.LayoutParams(-1,38));
+        TextView n=tv(name,29,TEXT); n.setTypeface(null,1); bar.addView(n);
+        TextView d=tv(desc,14,MUTED); bar.addView(d,new LinearLayout.LayoutParams(-1,48));
+        root.addView(bar);
+        return n;
+    }
+
+    void showHome(String artist){
+        base();
+        LinearLayout top=new LinearLayout(this); top.setGravity(Gravity.CENTER_VERTICAL);
+        ImageView logo=new ImageView(this); logo.setImageResource(R.drawable.aveson_logo); top.addView(logo,new LinearLayout.LayoutParams(52,52));
+        LinearLayout names=new LinearLayout(this); names.setOrientation(LinearLayout.VERTICAL);
+        TextView a=tv("AVESON",22,PURPLE); a.setTypeface(null,1); names.addView(a);
+        names.addView(tv("ARTIST WORKSPACE",10,MUTED));
+        top.addView(names,new LinearLayout.LayoutParams(0,58,1));
+        TextView avatar=tv("A",15,TEXT); avatar.setGravity(Gravity.CENTER); avatar.setBackground(bg(PANEL2,50));
+        top.addView(avatar,new LinearLayout.LayoutParams(48,48)); add(top,0,14);
+
+        TextView welcome=tv("Good evening, "+(artist.contains("@")?"Artist":"Artist")+"  ✦",27,TEXT); welcome.setTypeface(null,1); add(welcome,4,2);
+        add(tv("Everything you need to move your music forward.",14,MUTED),0,18);
+
+        metric("TOTAL STREAMS","128,540","+18.4% this month",GREEN);
+        metric("ROYALTIES","$1,284.60","$420.20 available",BLUE);
+        metric("ACTIVE RELEASES","12","3 in review",PURPLE);
+
+        LinearLayout rel=new LinearLayout(this); rel.setOrientation(LinearLayout.VERTICAL); rel.setPadding(18,16,18,16); rel.setBackground(bg(PANEL,28));
+        TextView rt=tv("RELEASE WORKFLOW",12,MUTED); rt.setTypeface(null,1); rel.addView(rt);
+        rel.addView(tv("Next step: finish your next release.",18,TEXT),lp(0,8));
+        TextView prog=tv("●  METADATA READY      ●  AUDIO CHECK      ○  SUBMIT",11,GREEN); rel.addView(prog,lp(0,8));
+        TextView open=button("OPEN MUSIC WORKSPACE  →",PANEL2); open.setBackground(stroke(PANEL2,LINE,25)); rel.addView(open,lp(0,0));
+        add(rel,4,20); open.setOnClickListener(v->showMusic());
+
+        LinearLayout activity=new LinearLayout(this); activity.setOrientation(LinearLayout.VERTICAL); activity.setPadding(18,16,18,16); activity.setBackground(bg(PANEL,28));
+        activity.addView(tv("RECENT ACTIVITY",12,MUTED));
+        activity.addView(tv("✦  Single “Midnight” approved",15,TEXT),lp(0,14));
+        activity.addView(tv("◉  Royalty statement generated",15,TEXT),lp(0,10));
+        activity.addView(tv("⌁  Audience grew 12.6%",15,TEXT),lp(0,0));
+        add(activity,0,30);
+
+        addBottom("HOME");
+    }
+
+    LinearLayout.LayoutParams lp(int l,int t){ LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2); p.setMargins(l,t,0,0); return p; }
+
+    void metric(String label,String value,String sub,int accent){
+        LinearLayout c=new LinearLayout(this); c.setOrientation(LinearLayout.VERTICAL); c.setPadding(18,16,18,16); c.setBackground(stroke(PANEL,LINE,28));
+        TextView l=tv(label,11,MUTED); l.setTypeface(null,1); c.addView(l);
+        TextView v=tv(value,29,TEXT); v.setTypeface(null,1); c.addView(v,lp(0,4));
+        TextView s=tv(sub,12,accent); c.addView(s,lp(0,2)); add(c,0,10);
+    }
+
+    void showMusic(){
+        base(); header("Music","Your releases, drafts and review status.");
+        TextView newBtn=button("＋  NEW RELEASE",PURPLE); add(newBtn,4,18); newBtn.setOnClickListener(v->showNewRelease());
+        release("MIDNIGHT","Single  •  Released","128,540 streams",GREEN);
+        release("ECHOES","EP  •  In review","Metadata check",BLUE);
+        release("UNTITLED PROJECT","Draft","Needs cover artwork",MUTED);
+        addBottom("MUSIC");
+    }
+
+    void release(String name,String status,String info,int accent){
+        LinearLayout c=new LinearLayout(this); c.setOrientation(LinearLayout.VERTICAL); c.setPadding(18,16,18,16); c.setBackground(bg(PANEL,25));
+        TextView n=tv(name,19,TEXT); n.setTypeface(null,1); c.addView(n);
+        c.addView(tv(status,12,accent),lp(0,5)); c.addView(tv(info,13,MUTED),lp(0,6));
+        TextView open=tv("VIEW RELEASE  →",12,BLUE); open.setGravity(Gravity.RIGHT); c.addView(open,lp(0,8));
+        add(c,0,10);
+    }
+
+    void showNewRelease(){
+        base(); header("New Release","Create a single, EP or album.");
+        TextView type=tv("RELEASE TYPE",11,MUTED); type.setTypeface(null,1); add(type,4,4);
+        LinearLayout types=new LinearLayout(this); types.setOrientation(LinearLayout.HORIZONTAL);
+        for(String x:new String[]{"SINGLE","EP","ALBUM"}){
+            TextView b=button(x,PANEL2); b.setTextSize(12); b.setBackground(stroke(PANEL2,LINE,22));
+            types.addView(b,new LinearLayout.LayoutParams(0,52,1)); ((LinearLayout.LayoutParams)b.getLayoutParams()).setMargins(0,0,7,0);
+        }
+        add(types,0,18);
+        field("Release title"); field("Primary artist"); field("Featuring (optional)");
+        field("Genre"); field("Language"); field("Label (optional)");
+        field("Copyright / ℗"); field("Lyrics (optional)");
+        TextView date=button("📅  CHOOSE RELEASE DATE",PANEL2); date.setBackground(stroke(PANEL2,LINE,25)); add(date,0,12);
+        date.setOnClickListener(v->{
+            Calendar c=Calendar.getInstance(); DatePickerDialog d=new DatePickerDialog(this,(view,y,m,day)->{
+                date.setText("📅  "+String.format(Locale.US,"%04d-%02d-%02d",y,m+1,day));
+            },c.get(Calendar.YEAR),c.get(Calendar.MONTH),c.get(Calendar.DAY_OF_MONTH));
+            d.getDatePicker().setMinDate(System.currentTimeMillis()-1000); d.show();
+        });
+        TextView audio=button("＋  SELECT AUDIO FILE",PANEL); audio.setBackground(stroke(PANEL,LINE,25)); add(audio,0,10);
+        TextView cover=button("＋  SELECT COVER ART",PANEL); cover.setBackground(stroke(PANEL,LINE,25)); add(cover,0,18);
+        audio.setOnClickListener(v->pick("audio/*",900)); cover.setOnClickListener(v->pick("image/*",901));
+        TextView submit=button("REVIEW & SUBMIT  →",PURPLE); add(submit,0,20);
+        submit.setOnClickListener(v->Toast.makeText(this,"Release review screen ready. Backend submission comes next.",Toast.LENGTH_LONG).show());
+        add(tv("AVESON standards: WAV/FLAC preferred • square cover • clean metadata • rights required.",12,MUTED),0,20);
+    }
+
+    void field(String hint){
+        EditText e=new EditText(this); e.setHint(hint); e.setHintTextColor(MUTED); e.setTextColor(TEXT); e.setTextSize(15); e.setSingleLine(true); e.setPadding(18,0,18,0); e.setBackground(stroke(PANEL,LINE,24)); add(e,0,10);
+    }
+    void pick(String mime,int code){
+        Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType(mime); startActivityForResult(i,code);
+    }
+
+    void showAnalytics(){
+        base(); header("Analytics","Understand your audience and growth.");
+        chartCard("STREAMS","128,540","+18.4%","▁▂▃▂▄▅▆▇▆▇▇█");
+        chartCard("LISTENERS","42,810","+12.6%","▁▂▂▃▄▃▅▆▇▇█");
+        chartCard("TOP COUNTRY","Uzbekistan","31.8% of listeners","UZ  ███████████");
+        chartCard("TOP PLATFORM","Spotify","54.2% of streams","SP  ███████████████");
+        addBottom("ANALYTICS");
+    }
+    void chartCard(String a,String b,String c,String bars){
+        LinearLayout x=new LinearLayout(this); x.setOrientation(LinearLayout.VERTICAL); x.setPadding(18,16,18,16); x.setBackground(bg(PANEL,25));
+        x.addView(tv(a,11,MUTED)); TextView big=tv(b,25,TEXT); big.setTypeface(null,1); x.addView(big,lp(0,5)); x.addView(tv(c,12,GREEN),lp(0,2));
+        TextView graph=tv(bars,20,PURPLE); graph.setTypeface(null,1); x.addView(graph,lp(0,10)); add(x,0,10);
+    }
+
+    void showMore(){
+        base(); header("More","Artist tools and business modules.");
+        String[][] items={{"PLATFORMS","DSPs and delivery status"},{"VIDEO & CLIPS","Upload and manage visual content"},{"AUDIO STANDARDS","AVESON audio requirements"},{"COVER STANDARDS","Artwork requirements"},{"RIGHTS","Master, publishing and splits"},{"ROYALTIES","Statements, earnings and payouts"},{"DISTRIBUTION","Delivery and release status"},{"AUDIENCE","Fans, countries and insights"},{"MARKETING","Campaigns and release promotion"},{"PROFILE & SETTINGS","Account and security"},{"LEGAL & DOCUMENTS","Agreements and policies"},{"SUPPORT","Help center and tickets"}};
+        for(String[] it:items){
+            TextView b=button(it[0]+"   ›",PANEL); b.setGravity(Gravity.CENTER_VERTICAL|Gravity.LEFT); b.setPadding(18,0,18,0);
+            add(b,0,9); b.setOnClickListener(v->Toast.makeText(this,it[0]+" module",Toast.LENGTH_SHORT).show());
+        }
+        addBottom("MORE");
+    }
+
+    void addBottom(String active){
+        Space s=new Space(this); root.addView(s,new LinearLayout.LayoutParams(1,18));
+        LinearLayout nav=new LinearLayout(this); nav.setGravity(Gravity.CENTER); nav.setPadding(6,6,6,6); nav.setBackground(stroke(PANEL2,LINE,32));
+        String[] labels={"HOME","MUSIC","＋","ANALYTICS","MORE"};
+        for(String x:labels){
+            TextView b=tv(x,11,x.equals(active)?TEXT:MUTED); b.setGravity(Gravity.CENTER); b.setTypeface(null,1);
+            if(x.equals(active)||x.equals("＋")) b.setBackground(bg(x.equals("＋")?PURPLE:PANEL,30));
+            nav.addView(b,new LinearLayout.LayoutParams(0,54,1));
+            b.setOnClickListener(v->{
+                if(x.equals("HOME")) showHome("Artist");
+                else if(x.equals("MUSIC")) showMusic();
+                else if(x.equals("＋")) showNewRelease();
+                else if(x.equals("ANALYTICS")) showAnalytics();
+                else showMore();
+            });
+        }
+        root.addView(nav);
+    }
+}
